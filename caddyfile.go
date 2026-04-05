@@ -1,6 +1,7 @@
 package caddycnamesync
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/caddyserver/caddy/v2"
@@ -45,6 +46,16 @@ func parseApp(d *caddyfile.Dispenser, _ any) (any, error) {
 				return nil, d.Errf("invalid TTL %q: %v", d.Val(), err)
 			}
 			app.TTL = caddy.Duration(dur)
+
+		case "strict":
+			if !d.NextArg() {
+				return nil, d.ArgErr()
+			}
+			b, err := strconv.ParseBool(d.Val())
+			if err != nil {
+				return nil, d.Errf("invalid strict value %q: %v", d.Val(), err)
+			}
+			app.Strict = &b
 
 		case "provider":
 			if !d.NextArg() {

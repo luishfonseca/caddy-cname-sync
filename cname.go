@@ -28,6 +28,9 @@ type App struct {
 	// TTL applied to newly created records.
 	TTL caddy.Duration `json:"ttl,omitempty"`
 
+	// Only create records for the configured zone. Defaults to true
+	Strict *bool `json:"strict,omitempty"`
+
 	// DNS provider module
 	DNSProviderRaw json.RawMessage `json:"dns_provider,omitempty" caddy:"namespace=dns.providers inline_key=name"`
 
@@ -67,6 +70,11 @@ func (a *App) Provision(ctx caddy.Context) error {
 
 	if a.TTL == 0 {
 		a.TTL = caddy.Duration(defaultTTL)
+	}
+
+	if a.Strict == nil {
+		v := true
+		a.Strict = &v
 	}
 
 	if a.DNSProviderRaw == nil {
@@ -190,8 +198,9 @@ func (a *App) desiredNames() []string {
 				}
 				for _, h := range hosts {
 					h = strings.ToLower(strings.TrimSuffix(h, "."))
-					if !strings.HasSuffix(h, zoneSuffix) {
-						continue // not our zone
+					if !strings.HasSuffix(h, zoneSuffix) && *a.Strict {
+						a.logger.Debug("skipping different zone (strict mode)", zap.String("host", h))
+						continue
 					}
 					name := strings.TrimSuffix(h, zoneSuffix)
 					if name == "" {

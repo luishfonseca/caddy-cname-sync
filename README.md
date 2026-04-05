@@ -38,6 +38,7 @@ xcaddy build \
 | zone         | required            | DNS zone to manage |
 | dns_provider | required            | DNS provider module (see [caddy-dns](https://github.com/caddy-dns)) |
 | target       | `<hostname>.<zone>` | CNAME target all managed records point to |
+| strict       | true                | Only create CNAME records for configured zone |
 | ttl          | 1h                  | TTL applied to newly created records |
 
 ### Example
