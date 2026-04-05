@@ -33,6 +33,15 @@ xcaddy build \
 
 ## Caddyfile
 
+| Field        | Default             | Description |
+| ------------ | ------------------- | -- |
+| zone         | required            | DNS zone to manage |
+| dns_provider | required            | DNS provider module (see [caddy-dns](https://github.com/caddy-dns)) |
+| target       | `<hostname>.<zone>` | CNAME target all managed records point to |
+| ttl          | 1h                  | TTL applied to newly created records |
+
+### Example
+
 ```caddyfile
 {
     cname_sync {

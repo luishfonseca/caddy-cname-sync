@@ -13,17 +13,6 @@ func init() {
 	httpcaddyfile.RegisterGlobalOption("cname_sync", parseApp)
 }
 
-// parseApp configures the "cname_sync" global option from Caddyfile.
-// Example:
-//
-//	cname_sync {
-//	    zone    example.com
-//	    target  foo.example.com
-//	    ttl     5m
-//	    provider cloudflare {
-//	        api_token {env.CF_API_TOKEN}
-//	    }
-//	}
 func parseApp(d *caddyfile.Dispenser, _ any) (any, error) {
 	app := new(App)
 
