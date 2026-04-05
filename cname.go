@@ -181,42 +181,41 @@ func (a *App) desiredNames() []string {
 	}
 	ca := cai.(*caddyhttp.App)
 
-	zoneSuffix := "." + strings.TrimSuffix(a.Zone, ".")
-
 	seen := make(map[string]struct{})
 	for _, srv := range ca.Servers {
 		for _, route := range srv.Routes {
-			for _, matcherSetRaw := range route.MatcherSetsRaw {
-				hostRaw, ok := matcherSetRaw["host"]
-				if !ok {
-					continue
-				}
-				var hosts caddyhttp.MatchHost
-				if err := json.Unmarshal(hostRaw, &hosts); err != nil {
-					a.logger.Warn("failed to parse host matcher", zap.Error(err))
-					continue
-				}
-				for _, h := range hosts {
-					h = strings.ToLower(strings.TrimSuffix(h, "."))
-					if !strings.HasSuffix(h, zoneSuffix) && *a.Strict {
-						a.logger.Debug("skipping different zone (strict mode)", zap.String("host", h))
-						continue
+			for _, matcherSet := range route.MatcherSets {
+				for _, m := range matcherSet {
+					if hostMatcher, ok := m.(caddyhttp.MatchHost); ok {
+						for _, h := range hostMatcher {
+							a.logger.Debug("found host", zap.String("name", h))
+							seen[h] = struct{}{}
+						}
 					}
-					name := strings.TrimSuffix(h, zoneSuffix)
-					if name == "" {
-						a.logger.Debug("skipping zone apex", zap.String("host", h))
-						continue
-					}
-					seen[name] = struct{}{}
 				}
 			}
 		}
 	}
 
+	zoneSuffix := "." + strings.TrimSuffix(a.Zone, ".")
+
 	names := make([]string, 0, len(seen))
 	for name := range seen {
+		name = strings.ToLower(strings.TrimSuffix(name, "."))
+		if !strings.HasSuffix(name, zoneSuffix) && *a.Strict {
+			a.logger.Debug("skipping different zone (strict mode)", zap.String("host", name))
+			continue
+		}
+
+		name := strings.TrimSuffix(name, zoneSuffix)
+		if name == "" {
+			a.logger.Debug("skipping zone apex", zap.String("host", name))
+			continue
+		}
+
 		names = append(names, name)
 	}
+
 	return names
 }
 
